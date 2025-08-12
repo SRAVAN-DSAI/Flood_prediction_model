@@ -5,22 +5,9 @@ CONFIG = {
     'cv_folds': 5,
     'model_params': {
         'LinearRegression': {},
-        'RandomForest': {
-            'n_estimators': 100,
-            'max_depth': None,
-            'min_samples_split': 2
-        },
-        'XGBoost': {
-            'n_estimators': 100,
-            'max_depth': 6,
-            'learning_rate': 0.1
-        },
-        'LightGBM': {
-            'n_estimators': 100,
-            'max_depth': -1,
-            'num_leaves': 31,
-            'learning_rate': 0.1
-        }
+        'RandomForest': {},
+        'XGBoost': {},
+        'LightGBM': {}
     },
     'output_dir': '/kaggle/working/models',
     'dashboard_port': 8050,
