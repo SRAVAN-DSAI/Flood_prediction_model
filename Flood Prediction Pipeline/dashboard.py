@@ -79,7 +79,7 @@ class DashboardAgent:
             # CSS for flood background
             css = """
             .gradio-container {
-                background-image: url('https://images.unsplash.com/photo-1624476869049-7e75db3b41b3');
+                background-image: url('https://www.spml.co.in/Images/blog/wdt&c-152776632.jpg');
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
