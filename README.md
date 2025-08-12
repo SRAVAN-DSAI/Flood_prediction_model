@@ -69,7 +69,7 @@ This is a machine learning application for predicting flood probability, deploye
 To run locally:
 1. Clone the repository:
    ```bash
-   git clone https://huggingface.co/spaces/sravan837/flood-prediction-app
+   git clone https://github.com/SRAVAN-DSAI/Flood_prediction_model
    cd flood-prediction-app
    ```
 2. Install dependencies:
