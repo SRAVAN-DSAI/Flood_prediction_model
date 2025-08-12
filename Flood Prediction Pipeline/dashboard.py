@@ -1,126 +1,129 @@
 from state import FloodPredictionState
 from logger import structured_log
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html
+from dash.dependencies import Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
+import seaborn as sns
+import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import threading
+import os
 
 class DashboardAgent:
     def __init__(self, config):
         self.config = config
         self.app = dash.Dash(__name__)
-        self.final_state = None
 
     def setup_dashboard(self, state: FloodPredictionState) -> FloodPredictionState:
-        """Set up Dash dashboard."""
+        """Set up and start the Dash dashboard."""
         try:
-            self.final_state = state
-            feature_columns = ['MonsoonIntensity', 'RiverManagement', 'Urbanization', 'ClimateChange',
-                              'DamsQuality', 'Siltation', 'AgriculturalPractices', 'Encroachments',
-                              'IneffectiveDisasterPreparedness', 'CoastalVulnerability', 'Landslides',
-                              'Watersheds', 'PopulationScore', 'WetlandLoss', 'InadequatePlanning',
-                              'PoliticalFactors', 'TopographyDrainage', 'Deforestation',
-                              'DeterioratingInfrastructure', 'DrainageSystems']
+            # Convert state data to DataFrame for visualization
+            metrics_df = pd.DataFrame.from_dict(state.model_metrics, orient='index')
             
-            # Create input fields with explicit list comprehension
-            input_fields = [
-                item
-                for col in feature_columns
-                for item in [
-                    html.Label(f"{col}:"),
-                    dcc.Input(id=f'input-{col}', type='number', value=5)
-                ]
-            ]
+            # Feature importance plot
+            feature_importance = pd.DataFrame({
+                'Feature': list(state.feature_importance.keys()),
+                'Importance': list(state.feature_importance.values())
+            }).sort_values(by='Importance', ascending=False)
             
-            self.app.layout = html.Div([
-                html.H1("Flood Prediction Dashboard"),
-                html.H2("Model Performance"),
-                dcc.Graph(id='model-metrics'),
-                html.H2("Feature Importance"),
-                dcc.Graph(id='feature-importance'),
-                html.H2("Prediction Distribution"),
-                dcc.Graph(id='prediction-distribution'),
-                html.H2("Correlation Heatmap"),
-                dcc.Graph(id='correlation-heatmap'),
-                html.H2("Make a Prediction"),
-                html.Div(input_fields),
-                html.Button('Predict', id='predict-button'),
-                html.Div(id='prediction-output'),
-                dcc.Interval(id='monitoring-interval', interval=self.config['monitoring_interval'] * 1000, n_intervals=0)
-            ])
-
-            @self.app.callback(
-                [Output('model-metrics', 'figure'),
-                 Output('feature-importance', 'figure'),
-                 Output('prediction-distribution', 'figure'),
-                 Output('correlation-heatmap', 'figure'),
-                 Output('prediction-output', 'children')],
-                [Input('predict-button', 'n_clicks'),
-                 Input('monitoring-interval', 'n_intervals')] + 
-                [Input(f'input-{col}', 'value') for col in feature_columns]
+            fig_importance = px.bar(
+                feature_importance,
+                x='Importance',
+                y='Feature',
+                title='Feature Importance',
+                orientation='h'
             )
-            def update_dashboard(n_clicks, n_intervals, *input_values):
-                metrics_fig = go.Figure()
-                if self.final_state and self.final_state.models:
-                    metrics_fig.add_trace(go.Bar(
-                        x=list(self.final_state.models.keys()),
-                        y=[self.final_state.models[m]['r2'] for m in self.final_state.models],
-                        name='R2 Score'
-                    ))
-                    metrics_fig.add_trace(go.Bar(
-                        x=list(self.final_state.models.keys()),
-                        y=[self.final_state.models[m]['mse'] for m in self.final_state.models],
-                        name='MSE'
-                    ))
-                    metrics_fig.update_layout(barmode='group', title='Model Performance Metrics')
-
-                feature_fig = go.Figure()
-                if self.final_state and self.final_state.feature_importance:
-                    feature_fig.add_trace(go.Bar(
-                        x=list(self.final_state.feature_importance.keys()),
-                        y=list(self.final_state.feature_importance.values()),
-                        name='Feature Importance'
-                    ))
-                    feature_fig.update_layout(title='SHAP Feature Importance')
-
-                pred_dist_fig = go.Figure()
-                if self.final_state and self.final_state.best_model:
-                    predictions = self.final_state.best_model.predict(self.final_state.X_test)
-                    pred_dist_fig = px.histogram(x=predictions, nbins=30, title='Prediction Distribution')
-
-                corr_fig = go.Figure()
-                if self.final_state and self.final_state.X is not None:
-                    corr_matrix = self.final_state.X.corr()
-                    corr_fig = go.Figure(data=go.Heatmap(
-                        z=corr_matrix.values,
-                        x=corr_matrix.columns,
-                        y=corr_matrix.columns,
-                        colorscale='RdBu'
-                    ))
-                    corr_fig.update_layout(title='Feature Correlation Heatmap')
-
-                prediction_output = ""
-                if n_clicks and self.final_state and self.final_state.best_model:
-                    input_data = dict(zip(feature_columns, input_values))
-                    input_data['Monsoon_Drainage'] = input_data['MonsoonIntensity'] * input_data['TopographyDrainage']
-                    input_data['Urban_Climate'] = input_data['Urbanization'] * input_data['ClimateChange']
-                    input_data['LandslideRisk'] = input_data['TopographyDrainage'] + input_data['Deforestation']
-                    input_data['InadequateInfrastructure'] = input_data['DeterioratingInfrastructure'] + input_data['DrainageSystems']
-                    input_df = pd.DataFrame([input_data], columns=feature_columns)
-                    input_df = input_df.drop(columns=['TopographyDrainage', 'Deforestation', 'DeterioratingInfrastructure', 'DrainageSystems'])
-                    input_df = pd.DataFrame(
-                        self.final_state.scaler.transform(input_df),
-                        columns=input_df.columns
-                    )
-                    prediction = self.final_state.best_model.predict(input_df)[0]
-                    prediction_output = f"Predicted Flood Probability: {prediction:.4f}"
-
-                return metrics_fig, feature_fig, pred_dist_fig, corr_fig, prediction_output
-
+            
+            # Prediction distribution
+            with pd.option_context('mode.use_inf_as_na', True):
+                fig_dist = px.histogram(
+                    x=state.y_test,
+                    nbins=30,
+                    title='Prediction Distribution',
+                    labels={'x': 'Flood Probability'}
+                )
+            
+            # Correlation heatmap
+            with pd.option_context('mode.use_inf_as_na', True):
+                corr_matrix = state.X_test.corr()
+                fig_corr = go.Figure(data=go.Heatmap(
+                    z=corr_matrix.values,
+                    x=corr_matrix.columns,
+                    y=corr_matrix.columns,
+                    colorscale='Viridis'
+                ))
+                fig_corr.update_layout(title='Feature Correlation Heatmap')
+            
+            # Model performance table
+            fig_table = go.Figure(data=[go.Table(
+                header=dict(values=['Model', 'R2 Score', 'MSE']),
+                cells=dict(values=[
+                    metrics_df.index,
+                    metrics_df['r2'].round(4),
+                    metrics_df['mse'].round(4)
+                ])
+            )])
+            fig_table.update_layout(title='Model Performance Metrics')
+            
+            # Define layout
+            self.app.layout = html.Div([
+                html.H1('Flood Prediction Dashboard'),
+                
+                html.Div([
+                    html.H3('Model Performance'),
+                    dcc.Graph(figure=fig_table)
+                ]),
+                
+                html.Div([
+                    html.H3('Feature Importance'),
+                    dcc.Graph(figure=fig_importance)
+                ]),
+                
+                html.Div([
+                    html.H3('Prediction Distribution'),
+                    dcc.Graph(figure=fig_dist)
+                ]),
+                
+                html.Div([
+                    html.H3('Feature Correlation'),
+                    dcc.Graph(figure=fig_corr)
+                ]),
+                
+                html.Div([
+                    html.H3('Make a Prediction'),
+                    html.Label('Select Feature Values:'),
+                    html.Div([
+                        html.Label(col),
+                        dcc.Input(id=col, type='number', value=0, step=1)
+                    ]) for col in state.X_test.columns
+                    ]),
+                
+                html.Button('Predict', id='predict-button'),
+                html.Div(id='prediction-output')
+            ])
+            
+            # Callback for prediction
+            @self.app.callback(
+                Output('prediction-output', 'children'),
+                [Input('predict-button', 'n_clicks')] + [
+                    Input(col, 'value') for col in state.X_test.columns
+                ]
+            )
+            def update_prediction(n_clicks, *input_values):
+                if n_clicks is None:
+                    return "Click the button to predict"
+                input_data = pd.DataFrame([input_values], columns=state.X_test.columns)
+                try:
+                    prediction = state.best_model.predict(input_data)[0]
+                    return f"Predicted Flood Probability: {prediction:.4f}"
+                except Exception as e:
+                    return f"Error in prediction: {str(e)}"
+            
             # Start Dash server in a separate thread
-            threading.Thread(target=self.app.run_server, kwargs={'port': self.config['dashboard_port'], 'debug': False}, daemon=True).start()
+            threading.Thread(target=self.app.run, kwargs={'port': self.config['dashboard_port'], 'debug': False}, daemon=True).start()
             structured_log('INFO', f"Dash dashboard started on port {self.config['dashboard_port']}")
             
         except Exception as e:
