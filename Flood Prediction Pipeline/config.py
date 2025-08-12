@@ -9,7 +9,7 @@ CONFIG = {
         'XGBoost': {},
         'LightGBM': {}
     },
-    'output_dir': '/kaggle/working/models',
+    'output_dir': '/kaggle/working/',
     'dashboard_port': 8050,
     'monitoring_interval': 60  # seconds
 }
