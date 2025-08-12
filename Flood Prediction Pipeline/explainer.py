@@ -22,7 +22,8 @@ class ExplainerAgent:
             else:
                 raise ValueError("Model does not support feature importance")
             
-            state.feature_importance = dict(zip(feature_names, importance))
+            # Convert NumPy types to Python native types
+            state.feature_importance = {str(name): float(imp) for name, imp in zip(feature_names, importance)}
             structured_log('INFO', "Computed feature importance", features=state.feature_importance)
             
         except Exception as e:
