@@ -1,4 +1,4 @@
-# Flood Prediction App
+# Flood Prediction Model
 This is a machine learning application for predicting flood probability, deployed as a Gradio-based dashboard on Hugging Face Spaces. The app provides an interactive interface to explore model performance, visualize key insights, and make predictions using sliders for input features. The dashboard features a flood-themed background for visual context.
 
 ## Features
