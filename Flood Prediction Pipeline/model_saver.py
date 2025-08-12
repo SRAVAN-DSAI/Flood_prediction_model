@@ -2,22 +2,24 @@ from state import FloodPredictionState
 from logger import structured_log
 import joblib
 import os
-from datetime import datetime
 
 class ModelSaverAgent:
     def __init__(self, config):
         self.config = config
+        self.output_dir = config['output_dir']
 
     def save_model(self, state: FloodPredictionState) -> FloodPredictionState:
-        """Save the best model and scaler."""
+        """Save the best model to the output directory."""
         try:
-            if not os.path.exists(self.config['output_dir']):
-                os.makedirs(self.config['output_dir'])
-                
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            state.saved_model_path = f"{self.config['output_dir']}/{state.best_model_name}_flood_prediction_{timestamp}.joblib"
-            joblib.dump({'model': state.best_model, 'scaler': state.scaler}, state.saved_model_path)
-            structured_log('INFO', f"Model and scaler saved to {state.saved_model_path}")
+            if state.best_model is None or state.best_model_name is None:
+                raise ValueError("No best model available to save")
+            
+            if not os.path.exists(self.output_dir):
+                os.makedirs(self.output_dir)
+            
+            model_path = os.path.join(self.output_dir, f"{state.best_model_name}.joblib")
+            joblib.dump(state.best_model, model_path)
+            structured_log('INFO', f"Saved best model {state.best_model_name} to {model_path}")
             
         except Exception as e:
             structured_log('ERROR', f"Error saving model: {str(e)}")

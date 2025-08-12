@@ -1,19 +1,19 @@
 from state import FloodPredictionState
 from logger import structured_log
-from sklearn.metrics import mean_squared_error, r2_score
-from datetime import datetime
 
 class MonitorAgent:
     def monitor_performance(self, state: FloodPredictionState) -> FloodPredictionState:
-        """Monitor model performance."""
+        """Monitor model performance metrics."""
         try:
-            predictions = state.best_model.predict(state.X_test)
-            r2 = r2_score(state.y_test, predictions)
-            mse = mean_squared_error(state.y_test, predictions)
-            state.monitoring_metrics['timestamps'].append(datetime.now().isoformat())
-            state.monitoring_metrics['r2'].append(r2)
-            state.monitoring_metrics['mse'].append(mse)
-            structured_log('INFO', "Updated monitoring metrics", r2=r2, mse=mse)
+            if not state.model_metrics:
+                raise ValueError("No model metrics available")
+            
+            for model_name, metrics in state.model_metrics.items():
+                structured_log('INFO', f"Monitoring {model_name}", r2=metrics['r2'], mse=metrics['mse'])
+                
+            best_r2 = state.model_metrics[state.best_model_name]['r2']
+            if best_r2 < 0.5:
+                structured_log('WARNING', f"Best model {state.best_model_name} has low R2 score: {best_r2}")
             
         except Exception as e:
             structured_log('ERROR', f"Error in monitoring: {str(e)}")

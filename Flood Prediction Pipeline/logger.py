@@ -1,22 +1,13 @@
 import logging
 import json
-from datetime import datetime
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s',
-    handlers=[
-        logging.FileHandler('flood_prediction_dashboard.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def structured_log(level, message, **kwargs):
-    log_entry = {
-        'timestamp': datetime.now().isoformat(),
-        'level': level,
-        'message': message,
-        **kwargs
-    }
-    logger.log(getattr(logging, level.upper()), json.dumps(log_entry))
+def structured_log(level: str, message: str, **kwargs):
+    log_dict = {'message': message, **kwargs}
+    if level.upper() == 'INFO':
+        logging.info(json.dumps(log_dict))
+    elif level.upper() == 'ERROR':
+        logging.error(json.dumps(log_dict))
+    else:
+        logging.debug(json.dumps(log_dict))

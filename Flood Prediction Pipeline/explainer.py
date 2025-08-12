@@ -7,32 +7,25 @@ class ExplainerAgent:
         self.config = config
 
     def explain_model(self, state: FloodPredictionState) -> FloodPredictionState:
-        """Generate feature importance for the best model without SHAP."""
+        """Compute feature importance for the best model."""
         try:
-            if state.best_model is None:
-                raise ValueError("No best model available for explanation")
+            if state.best_model is None or state.X_train is None:
+                raise ValueError("Best model or training data not available")
             
-            model_name = state.best_model_name
             model = state.best_model
             feature_names = state.X_train.columns
             
-            # Compute feature importance based on model type
-            if model_name in ['RandomForest', 'XGBoost', 'LightGBM']:
-                # Tree-based models provide feature_importances_
-                importances = model.feature_importances_
-                structured_log('INFO', f"Using feature_importances_ for {model_name}")
-            elif model_name == 'LinearRegression':
-                # LinearRegression provides coef_
-                importances = np.abs(model.coef_)
-                structured_log('INFO', f"Using absolute coefficients for {model_name}")
+            if hasattr(model, 'feature_importances_'):
+                importance = model.feature_importances_
+            elif hasattr(model, 'coef_'):
+                importance = np.abs(model.coef_)
             else:
-                raise ValueError(f"Unsupported model type for feature importance: {model_name}")
+                raise ValueError("Model does not support feature importance")
             
-            # Store feature importance in state
-            state.feature_importance = dict(zip(feature_names, importances))
-            structured_log('INFO', "Generated feature importance", features=state.feature_importance)
+            state.feature_importance = dict(zip(feature_names, importance))
+            structured_log('INFO', "Computed feature importance", features=state.feature_importance)
             
         except Exception as e:
-            structured_log('ERROR', f"Error in model explanation: {str(e)}")
+            structured_log('ERROR', f"Error in explaining model: {str(e)}")
             raise
         return state
