@@ -24,6 +24,8 @@ class ExplainerAgent:
             
             # Convert NumPy types to Python native types
             state.feature_importance = {str(name): float(imp) for name, imp in zip(feature_names, importance)}
+            # Debug: Log types of feature_importance
+            print("Feature Importance Types:", {k: type(v).__name__ for k, v in state.feature_importance.items()})
             structured_log('INFO', "Computed feature importance", features=state.feature_importance)
             
         except Exception as e:
