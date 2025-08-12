@@ -96,10 +96,12 @@ class DashboardAgent:
                     html.H3('Make a Prediction'),
                     html.Label('Select Feature Values:'),
                     html.Div([
-                        html.Label(col),
-                        dcc.Input(id=col, type='number', value=0, step=1)
-                    ]) for col in state.X_test.columns
-                    ]),
+                        html.Div([
+                            html.Label(col),
+                            dcc.Input(id=col, type='number', value=0, step=1)
+                        ]) for col in state.X_test.columns
+                    ])
+                ]),
                 
                 html.Button('Predict', id='predict-button'),
                 html.Div(id='prediction-output')
