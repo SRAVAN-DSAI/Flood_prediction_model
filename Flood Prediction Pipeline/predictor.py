@@ -3,14 +3,18 @@ from logger import structured_log
 import pandas as pd
 
 class PredictorAgent:
-    def make_sample_prediction(self, state: FloodPredictionState) -> FloodPredictionState:
+    def make_sample_prediction(self, state) -> FloodPredictionState:
         """Make a sample prediction using the best model."""
         try:
-            if state.best_model is None or state.X_test is None:
+            # Handle state as dict or FloodPredictionState
+            best_model = state['best_model'] if isinstance(state, dict) else state.best_model
+            X_test = state['X_test'] if isinstance(state, dict) else state.X_test
+            
+            if best_model is None or X_test is None:
                 raise ValueError("Best model or test data not available")
             
-            sample_data = state.X_test.iloc[0:1]
-            prediction = state.best_model.predict(sample_data)[0]
+            sample_data = X_test.iloc[0:1]
+            prediction = best_model.predict(sample_data)[0]
             structured_log('INFO', f"Sample prediction for first test instance: {prediction:.4f}")
             
         except Exception as e:
@@ -18,9 +22,13 @@ class PredictorAgent:
             raise
         return state
 
-    def predict(self, state: FloodPredictionState, input_data: dict) -> float:
+    def predict(self, state, input_data: dict) -> float:
         """Make a prediction for given input data."""
         try:
+            # Handle state as dict or FloodPredictionState
+            best_model = state['best_model'] if isinstance(state, dict) else state.best_model
+            X_test = state['X_test'] if isinstance(state, dict) else state.X_test
+            
             input_df = pd.DataFrame([input_data])
             # Apply feature engineering to match training data
             input_df['Monsoon_Drainage'] = input_df['MonsoonIntensity'] * input_df['TopographyDrainage']
@@ -29,7 +37,10 @@ class PredictorAgent:
             input_df['InadequateInfrastructure'] = input_df['DeterioratingInfrastructure'] + input_df['DrainageSystems']
             input_df = input_df.drop(columns=['TopographyDrainage', 'Deforestation', 'DeterioratingInfrastructure', 'DrainageSystems'], errors='ignore')
             
-            prediction = state.best_model.predict(input_df)[0]
+            # Ensure input_df has same columns as X_test
+            input_df = input_df[X_test.columns]
+            
+            prediction = best_model.predict(input_df)[0]
             return prediction
         except Exception as e:
             structured_log('ERROR', f"Error in prediction: {str(e)}")
