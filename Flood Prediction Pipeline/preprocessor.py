@@ -1,7 +1,6 @@
 from state import FloodPredictionState
 from logger import structured_log
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 import pandas as pd
 
 class PreprocessorAgent:
@@ -9,43 +8,31 @@ class PreprocessorAgent:
         self.config = config
 
     def preprocess_data(self, state: FloodPredictionState) -> FloodPredictionState:
-        """Preprocess data with feature engineering."""
+        """Preprocess the dataset, apply feature engineering, and split into train/test."""
         try:
-            # Create a copy of the original feature set
-            X_engineered = state.X.copy()
+            if state.df is None:
+                raise ValueError("No dataset available for preprocessing")
             
-            # Feature engineering: Add new features
-            X_engineered['Monsoon_Drainage'] = X_engineered['MonsoonIntensity'] * X_engineered['TopographyDrainage']
-            X_engineered['Urban_Climate'] = X_engineered['Urbanization'] * X_engineered['ClimateChange']
-            X_engineered['LandslideRisk'] = X_engineered['TopographyDrainage'] + X_engineered['Deforestation']
-            X_engineered['InadequateInfrastructure'] = X_engineered['DeterioratingInfrastructure'] + X_engineered['DrainageSystems']
+            # Feature engineering
+            state.df['Monsoon_Drainage'] = state.df['MonsoonIntensity'] * state.df['TopographyDrainage']
+            state.df['Urban_Climate'] = state.df['Urbanization'] * state.df['ClimateChange']
+            state.df['LandslideRisk'] = state.df['Landslides'] + state.df['TopographyDrainage']
+            state.df['InadequateInfrastructure'] = state.df['DeterioratingInfrastructure'] + state.df['DrainageSystems']
             
             # Drop specified columns
-            cols_to_drop = ['TopographyDrainage', 'Deforestation', 'DeterioratingInfrastructure', 'DrainageSystems']
-            state.X = X_engineered.drop(columns=cols_to_drop)
+            columns_to_drop = ['TopographyDrainage', 'Deforestation', 'DeterioratingInfrastructure', 'DrainageSystems']
+            state.df = state.df.drop(columns=columns_to_drop, errors='ignore')
+            structured_log('INFO', f"Dropped columns: {columns_to_drop}")
             
-            # Split data
+            # Split features and target
+            X = state.df.drop(columns=['FloodProbability'])
+            y = state.df['FloodProbability']
+            
+            # Train-test split
             state.X_train, state.X_test, state.y_train, state.y_test = train_test_split(
-                state.X, state.y, test_size=self.config['test_size'], random_state=self.config['random_state']
+                X, y, test_size=self.config['test_size'], random_state=self.config['random_state']
             )
-            
-            # Scale features
-            state.scaler = StandardScaler()
-            state.X_train = pd.DataFrame(
-                state.scaler.fit_transform(state.X_train),
-                columns=state.X_train.columns,
-                index=state.X_train.index
-            )
-            state.X_test = pd.DataFrame(
-                state.scaler.transform(state.X_test),
-                columns=state.X_test.columns,
-                index=state.X_test.index
-            )
-            
-            structured_log('INFO', f"Data split and scaled: training (n={len(state.X_train)}), test (n={len(state.X_test)})")
-            
-            if state.X_train.isnull().any().any() or state.y_train.isnull().any():
-                raise ValueError("Missing values detected in the dataset.")
+            structured_log('INFO', f"Train shape: {state.X_train.shape}, Test shape: {state.X_test.shape}")
             
         except Exception as e:
             structured_log('ERROR', f"Error in preprocessing: {str(e)}")

@@ -4,6 +4,7 @@ import pandas as pd
 
 class FloodPredictionState(BaseModel):
     data_path: str
+    df: Optional[pd.DataFrame] = None
     X_train: Optional[pd.DataFrame] = None
     X_test: Optional[pd.DataFrame] = None
     y_train: Optional[pd.Series] = None
