@@ -29,4 +29,4 @@ def structured_log(level: str, message: str, **kwargs):
     elif level.upper() == 'ERROR':
         logging.error(json.dumps(log_dict))
     else:
-        logging.debug(json.dumps(log_dict))s
+        logging.debug(json.dumps(log_dict))
