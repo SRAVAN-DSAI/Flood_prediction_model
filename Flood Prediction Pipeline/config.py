@@ -22,7 +22,7 @@ CONFIG = {
             'learning_rate': [0.01, 0.1]
         }
     },
-    'output_dir': 'models',
+    'output_dir': '/kaggle/working/models',
     'dashboard_port': 8050,
     'monitoring_interval': 60  # seconds
 }
