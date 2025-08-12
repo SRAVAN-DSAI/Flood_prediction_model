@@ -3,6 +3,7 @@ from logger import structured_log
 import shap
 import matplotlib.pyplot as plt
 from datetime import datetime
+import numpy as np
 
 class ExplainerAgent:
     def __init__(self, config):
