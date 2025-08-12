@@ -17,12 +17,13 @@ class ModelTrainerAgent:
         }
 
     def train_models(self, state: FloodPredictionState) -> FloodPredictionState:
-        """Train multiple models and store performance metrics."""
+        """Train multiple models and store performance metrics and models."""
         try:
             if state.X_train is None or state.y_train is None or state.X_test is None or state.y_test is None:
                 raise ValueError("Training or test data is not available")
             
             state.model_metrics = {}
+            state.models = {}
             
             for model_name, model_class in self.models.items():
                 # Initialize model with parameters from config
@@ -32,6 +33,9 @@ class ModelTrainerAgent:
                 # Train model
                 structured_log('INFO', f"Training {model_name}")
                 model.fit(state.X_train, state.y_train)
+                
+                # Store model
+                state.models[model_name] = model
                 
                 # Evaluate model
                 y_pred = model.predict(state.X_test)
