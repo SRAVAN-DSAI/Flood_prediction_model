@@ -3,7 +3,6 @@ CONFIG = {
     'test_size': 0.2,
     'random_state': 42,
     'model_params': {
-        'LinearRegression': {},
         'RandomForest': {},
         'XGBoost': {},
         'LightGBM': {}

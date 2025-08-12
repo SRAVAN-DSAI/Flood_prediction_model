@@ -1,6 +1,5 @@
 from state import FloodPredictionState
 from logger import structured_log
-from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
@@ -10,7 +9,6 @@ class ModelTrainerAgent:
     def __init__(self, config):
         self.config = config
         self.models = {
-            'LinearRegression': LinearRegression,
             'RandomForest': RandomForestRegressor,
             'XGBoost': XGBRegressor,
             'LightGBM': LGBMRegressor
