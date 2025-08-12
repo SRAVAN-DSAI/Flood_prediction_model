@@ -1,5 +1,5 @@
 CONFIG = {
-    'data_path': '/kaggle/input/flood-prediction-dataset/flood.csv',
+    'data_path': 'data/flood.csv',
     'test_size': 0.2,
     'random_state': 42,
     'model_params': {
@@ -7,6 +7,5 @@ CONFIG = {
         'XGBoost': {},
         'LightGBM': {}
     },
-    'output_dir': '/kaggle/working/models',
-    'dashboard_port': 7860
+    'output_dir': 'models'
 }

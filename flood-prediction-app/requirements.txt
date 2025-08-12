@@ -1,0 +1,13 @@
+pandas
+numpy
+scikit-learn
+xgboost
+lightgbm
+joblib
+langgraph
+langchain-core
+matplotlib
+seaborn
+plotly
+gradio==4.44.0
+pyngrok
