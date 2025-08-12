@@ -8,5 +8,5 @@ CONFIG = {
         'LightGBM': {}
     },
     'output_dir': '/kaggle/working/models',
-    'dashboard_port': 8050
+    'dashboard_port': 7860
 }
