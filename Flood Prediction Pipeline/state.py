@@ -21,3 +21,6 @@ class FloodPredictionState(BaseModel):
     feature_importance: Optional[Dict] = None
     visualizations: Dict[str, str] = {}
     monitoring_metrics: Dict[str, list] = {'timestamps': [], 'r2': [], 'mse': []}
+
+    class Config:
+        arbitrary_types_allowed = True
