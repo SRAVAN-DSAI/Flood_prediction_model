@@ -44,7 +44,6 @@ This is a machine learning application for predicting flood probability, deploye
   - `requirements.txt`: Lists dependencies (pandas, numpy, scikit-learn, xgboost, lightgbm, gradio, etc.).
 - **Directory Structure**:
   ```
-  flood-prediction-app/
   ├── app.py
   ├── config.py
   ├── data/
