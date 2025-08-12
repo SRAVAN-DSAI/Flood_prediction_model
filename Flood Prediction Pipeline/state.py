@@ -14,6 +14,7 @@ class FloodPredictionState(BaseModel):
     y_test: Optional[pd.Series] = None
     scaler: Optional[StandardScaler] = None
     models: Dict[str, Dict[str, Any]] = {}
+    model_metrics: Optional[Dict[str, Dict[str, float]]] = None
     best_model: Any = None
     best_model_name: Optional[str] = None
     saved_model_path: Optional[str] = None
