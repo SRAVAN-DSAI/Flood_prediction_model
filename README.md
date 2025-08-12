@@ -1,15 +1,4 @@
----
-title: Flood Prediction App
-emoji: 🌊
-colorFrom: blue
-colorTo: gray
-sdk: gradio
-sdk_version: 4.44.0
-app_file: app.py
-pinned: false
----
-
-# Flood Prediction App
+# Flood Prediction Model
 This is a machine learning application for predicting flood probability, deployed as a Gradio-based dashboard on Hugging Face Spaces. The app provides an interactive interface to explore model performance, visualize key insights, and make predictions using sliders for input features. The dashboard features a flood-themed background for visual context.
 
 ## Features
